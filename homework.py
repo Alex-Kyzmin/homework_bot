@@ -30,8 +30,6 @@ HOMEWORK_VERDICTS = {
 def check_tokens():
     """Функция по проверке наличия переменных окружения."""
     return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
-        
-    
 
 
 def send_message(bot, message):
@@ -57,8 +55,7 @@ def get_api_answer(timestamp):
         if 'error' in response:
             raise SystemError(
                 f'Ошибка данных - {response["error"]},'
-                ' урл: {ENDPOINT}, хедеры: {headers}, параметры: {params}'
-                )
+                ' урл: {ENDPOINT}, хедеры: {headers}, параметры: {params}')
         elif 'code' in response:
             raise SystemError(f'Ошибка данных - {response["code"]}')
         return response
@@ -101,7 +98,6 @@ def main():
         eror_message = 'Отсутствует обязательная переменная окружения'
         logging.critical(eror_message)
         raise Exception(eror_message)
-    
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
     errors_log = []
