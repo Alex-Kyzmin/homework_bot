@@ -29,19 +29,20 @@ HOMEWORK_VERDICTS = {
 
 def check_tokens():
     """Функция по проверке наличия переменных окружения."""
-    if not all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
-        raise logging.critical('Отсутствует обязательная переменная окружения')
-    return True
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
+        
+    
 
 
 def send_message(bot, message):
     """Функция отправки сообщения пользователю в Телеграмм."""
+    logging.info(f'Бот отправляет сообщение: "{message}".')
     try:
-        logging.info(f'Бот отправил сообщение: "{message}".')
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logging.debug('Успешная отправка сообщения в Telegram.')
     except telegram.error.TelegramError as error:
         logging.error(f'Не отправляются в Telegram сообщения, {error}')
+    else:
+        logging.debug('Успешная отправка сообщения в Telegram.')
 
 
 def get_api_answer(timestamp):
@@ -49,19 +50,18 @@ def get_api_answer(timestamp):
     params = {'from_date': timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
-        if response.status_code == HTTPStatus.OK:
-            logging.info('Успешное получение Эндпоинта')
-            response = response.json()
-            if 'error' in response:
-                # Не понял о каких аргументах идет речь.
-                # Можете уточнить свое замечание.
-                raise SystemError(f'Ошибка данных - {response["error"]}')
-            elif 'code' in response:
-                raise SystemError(f'Ошибка данных - {response["code"]}')
-            else:
-                return response
-        else:
+        if response.status_code != HTTPStatus.OK:
             raise SystemError(f'Недоступен эндпойнт. {response.status_code}')
+        logging.info('Успешное получение Эндпоинта')
+        response = response.json()
+        if 'error' in response:
+            raise SystemError(
+                f'Ошибка данных - {response["error"]},'
+                ' урл: {ENDPOINT}, хедеры: {headers}, параметры: {params}'
+                )
+        elif 'code' in response:
+            raise SystemError(f'Ошибка данных - {response["code"]}')
+        return response
     except Exception as error:
         raise SystemError(f'Ошибка получения request, {error}')
 
@@ -98,9 +98,13 @@ def parse_status(homework):
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
-        raise Exception('Ошибка наличия токенов.')
+        eror_message = 'Отсутствует обязательная переменная окружения'
+        logging.critical(eror_message)
+        raise Exception(eror_message)
+    
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     timestamp = int(time.time())
+    errors_log = []
 
     while True:
         try:
@@ -117,13 +121,10 @@ def main():
                 )
                 timestamp = response.get('current_date')
         except Exception as error:
-            stop_list = []
-            message = f'Сбой в работе программы: {error}'
-            if 'stop' not in stop_list:
+            logging.error(error)
+            if str(error) not in errors_log:
                 send_message(bot, message)
-                stop_list.append('stop')
-            if 'stop' in stop_list:
-                logging.debug('Сбой в работе программы')
+                errors_log.append(str(error))
         finally:
             time.sleep(RETRY_PERIOD)
 
