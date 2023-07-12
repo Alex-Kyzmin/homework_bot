@@ -55,7 +55,7 @@ def get_api_answer(timestamp):
         if 'error' in response:
             raise SystemError(
                 f'Ошибка данных - {response["error"]},'
-                ' урл: {ENDPOINT}, хедеры: {headers}, параметры: {params}')
+                f' урл: {ENDPOINT}, хедеры: {HEADERS}, параметры: {params}')
         elif 'code' in response:
             raise SystemError(f'Ошибка данных - {response["code"]}')
         return response
