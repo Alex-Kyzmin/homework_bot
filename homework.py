@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Константы обязательных переменных окружения
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 # https://t.me/check_projects_bot (бот для отправки сообщения)
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
